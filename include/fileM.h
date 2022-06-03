@@ -6,7 +6,7 @@
 #include "types.h"
 
 int write_entry(char filename[], FileEntry entry);
-
-FileEntry *show_entry_by_name(char filename[], char p_name[]);
+int show_entry_by_name(char filename[], char p_name[], FileEntry *entry);
+int show_entry_by_group(char filename[], char p_group[], FileEntry *arr, int *len);
 
 #endif //PASSWORDMANAGER_FILEM_H

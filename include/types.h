@@ -7,7 +7,8 @@ typedef struct {
   char *name;
   char *username;
   char *password;
-  int date;
+  char *date;
+  long int unixTime;
 } FileEntry;
 
 #endif // TYPESDEF

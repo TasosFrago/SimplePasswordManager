@@ -1,0 +1,5 @@
+bank	revolut	1654274896	tasos	1322	
+bank	pireus	1654274896	tasos	1322	
+bank	ethniki	1654274896	tasos	1322	
+bank	attica	1654274896	tasos	1322	
+bank	alpha bank	1654274896	tasos	1322	

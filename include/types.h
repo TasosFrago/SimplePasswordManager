@@ -11,4 +11,4 @@ typedef struct {
   long int unixTime;
 } FileEntry;
 
-#endif // TYPESDEF
+#endif // TYPES_H

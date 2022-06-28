@@ -8,50 +8,6 @@
 #include "../include/fileM.h"
 #include "../include/types.h"
 
-uint32_t f(uint32_t block, uint32_t key) {
-  return block ^ key;
-}
-
-uint64_t encrypt(uint32_t left, uint32_t right, uint32_t rounds, uint32_t keys[]) {
-  uint32_t i, left1, right1;
-  for(i = 0; i < rounds; i++) {
-    left1 = f(left, keys[i]) ^ right;
-    right1 = left;
-    if(i == (rounds-1)) {
-      left = right1;
-      right = left1;
-    } else {
-      left = left1;
-      right = right1;
-    }
-  }
-  return (uint64_t)left<<32 | right;
-}
-
-uint64_t decrypt(uint32_t left, uint32_t right, uint32_t rounds, uint32_t keys[]) {
-  uint32_t i, left1, right1;
-  for(i = 0; i < rounds; i++) {
-    left1 = f(left, keys[rounds-i-1]) ^ right;
-    right1 = left;
-    if(i == (rounds-1)) {
-      left = right1;
-      right = left1;
-    } else {
-      left = left1;
-      right = right1;
-    }
-  }
-  return (uint64_t)left<<32 | right;
-}
-
-void test() {
-  char tes = 't';
-  printf("%d\n", tes);
-  int te;
-  te = (int)tes;
-  printf("%d\n", te);
-}
-
 // Group Name Date Username Password
 
 int write_entry(char filename[], FileEntry entry) {
@@ -67,7 +23,12 @@ int write_entry(char filename[], FileEntry entry) {
   fptr = fopen(filename, "a");
 
   // Get current time in Unix timestamp
-  time_t t = time(NULL);
+  time_t t;
+  if(entry.unixTime == 0) {
+    t = time(NULL);
+  } else {
+    t = entry.unixTime;
+  }
   // Add encryption here
   fprintf(fptr, "%s\t%s\t%ld\t%s\t%s\t\n", entry.group, entry.name, t, entry.username, entry.password);
 
@@ -123,21 +84,20 @@ int show_entry_by_name(char filename[], char p_name[], FileEntry *entry) {
   return 0;
 }
 
-int show_entry_by_group(char filename[], char p_group[], FileEntry *arr, int *len) {
+FileEntry *show_entry_by_group(char filename[], char p_group[], int *len) {
   FILE *fptr = NULL;
   fptr = fopen(filename, "r");
   if(fptr == NULL) {
     fprintf(stderr, "Error file %s does not exist.\n", filename);
   }
-  FileEntry entry;
   char chunk[256];
   char *copy;
   char *cpy;
-  unsigned short int isEmpty = 0;
-  unsigned int count = 0;
-  *len = 0;
-  size_t size = sizeof(FileEntry);
+
+  FileEntry *array = malloc(sizeof(FileEntry));
+  uint8_t isEmpty = 0;
   while(fgets(chunk, sizeof(chunk), fptr)) {
+    FileEntry entry;
     printf("%s", chunk);
     copy = strdup(chunk);
 
@@ -150,11 +110,11 @@ int show_entry_by_group(char filename[], char p_group[], FileEntry *arr, int *le
     password[strcspn(password, "\n")] = 0;
 
     if(!strcmp(group, p_group)) {
-      arr[count].group = group;
-      arr[count].name = name;
-      arr[count].username = username;
-      arr[count].password = password;
-      arr[count].unixTime = date;
+      array[*len].group = group;
+      array[*len].name = name;
+      array[*len].username = username;
+      array[*len].password = password;
+      array[*len].unixTime = date;
 
       struct tm *info;
       char buf[30];
@@ -162,12 +122,68 @@ int show_entry_by_group(char filename[], char p_group[], FileEntry *arr, int *le
       strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S ", info);
       cpy = strdup(buf);
 
-      arr[count].date = cpy;
-      count++;
+      array[*len].date = cpy;
       (*len)++;
-      /* size += sizeof(FileEntry); */
-      /* arr = (FileEntry *)realloc(arr, size); */
+
+      array = realloc(array, sizeof(FileEntry) * (*len + 1));
+    } else {
+      isEmpty++;
     }
   }
+  return array;
+}
+
+int change_group(char filename[], char groupName[], char newGroupName[], uint8_t del) {
+  FILE *fptr = NULL;
+  FILE *fptr2 = NULL;
+  fptr = fopen(filename, "r+");
+
+  char new[] = "new";
+  char *newFilename = malloc(sizeof(char)*strlen(filename) + 3);
+  newFilename = strdup(new);
+  strcat(newFilename, filename);
+  printf("%s\n", newFilename);
+
+  fptr2 = fopen(newFilename, "w+");
+  if(fptr == NULL) {
+    fprintf(stderr, "Error file %s does not exist.\n", filename);
+  }
+  char chunk[256];
+  char *copy;
+  char *cpy;
+
+  uint8_t isEmpty = 0;
+  while(fgets(chunk, sizeof(chunk), fptr)) {
+    FileEntry entry;
+    printf("%s", chunk);
+    copy = strdup(chunk);
+
+    char *saveptr;
+    char *group = strtok_r(copy, "\t", &saveptr);
+    char *name = strtok_r(NULL, "\t", &saveptr);
+    long int date = atoi(strtok_r(NULL, "\t", &saveptr));
+    char *username = strtok_r(NULL, "\t", &saveptr);
+    char *password = strtok_r(NULL, "\t", &saveptr);
+    password[strcspn(password, "\n")] = 0;
+
+    entry.group = group;
+    entry.name = name;
+    entry.unixTime = date;
+    entry.username = username;
+    entry.password = password;
+    if (!strcmp(group, groupName)) {
+      if(del == 0) {
+        entry.group = newGroupName;
+        write_entry(newFilename, entry);
+      }
+    } else {
+      write_entry(newFilename, entry);
+      isEmpty++;
+    }
+  }
+  fclose(fptr);
+  fclose(fptr2);
+  remove(filename);
+  rename(newFilename, filename);
   return 0;
 }

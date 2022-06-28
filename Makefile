@@ -1,11 +1,11 @@
 CC = gcc
 
 TARGET = src/main.c
-INCLUDES = src/fileM.c
+INCLUDES = src/fileM.c src/encryptionDecryption.c
 EXEC = bin/pass
 
 all : $(TARGET) $(INCLUDES)
-	$(CC) $(TARGET) $(INCLUDES) -o $(EXEC)
+	$(CC) -g $(TARGET) $(INCLUDES) -o $(EXEC)
 
 exec :
 	./$(EXEC)

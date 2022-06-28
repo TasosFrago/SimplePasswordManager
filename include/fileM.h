@@ -5,12 +5,13 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdint.h>
 
 #include "types.h"
 
 int write_entry(char filename[], FileEntry entry);
 int show_entry_by_name(char filename[], char p_name[], FileEntry *entry);
-int show_entry_by_group(char filename[], char p_group[], FileEntry *arr, int *len);
-void test();
+FileEntry *show_entry_by_group(char filename[], char p_group[], int *len);
+int change_group(char filename[], char groupName[], char newGroupName[], uint8_t del);
 
 #endif //PASSWORDMANAGER_FILEM_H
